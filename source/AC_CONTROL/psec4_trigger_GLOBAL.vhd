@@ -910,138 +910,143 @@ begin
 	end if;
 end process;
 ----------------------------------------------------------	
-----process to measure trigger rates ('scaler' mode)
+--process to measure trigger rates ('scaler' mode)
 RATE_ONLY_flag <= SELF_TRIG_RATE_ONLY;
---process(xCLR_ALL, CLK_40, SELF_TRIG_RATE_ONLY, SELF_COUNT_sig)
---variable i : integer range 100 downto -1 := 0;
---begin
---	--SCALER_MODE_STATE <= SELF_CHECK;
---	if xCLR_ALL = '1' or RATE_ONLY_flag = '0' then
---		for ii in 29 downto 0 loop
---			SELF_COUNT_RATE(ii)       <= (others=>'0');
---			SELF_COUNT_RATE_LATCH(ii) <= (others=>'0');
---		end loop;
---	
---		reset_trig_from_scaler_mode <= '0';
---		SCALER_MODE_STATE <= SELF_CHECK;
---
--- 	elsif falling_edge(CLK_40) and RATE_ONLY_flag = '1' then
---		
---		--increment scalar state machine:
---		case SCALER_MODE_STATE is
---		
---			--check to see state of slow (1 Hz nominal) state machine
---			when SELF_CHECK =>
---				reset_trig_from_scaler_mode <= '1';
---				
---				--state #1: count triggers
---				if self_count_1Hz(2) = '1'   then
---					--check for overflow
---					for ii in 29 downto 0 loop
---						if SELF_COUNT_RATE(ii) = x"FFFF" then
---							SELF_COUNT_RATE(ii) <= x"FFFE";
---						else
---							SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii);
---						end if;
---					end loop;
---					SCALER_MODE_STATE <= SELF_CHECK_RESET; 
---				
---				--state #2: register trigger count and reset counters
---				else
---					SCALER_MODE_STATE <= SELF_COUNT_LATCH; 
---				end if;
---				
---			when SELF_CHECK_RESET =>
---				reset_trig_from_scaler_mode <= '1';
---				SCALER_MODE_STATE <= PRE_SELF_COUNT;
---				
---			when PRE_SELF_COUNT =>
---				if self_count_1Hz(2) = '1' then
---					SCALER_MODE_STATE <= SELF_COUNT;
---				else
---					SCALER_MODE_STATE <= SELF_CHECK;	
---				end if;
---
---			--count triggers
---			when SELF_COUNT =>
---				reset_trig_from_scaler_mode <= '0';		
---				
---				--did self-trigger fire?
---				if self_trig_latched_reg(2) = '1' then
---					SCALER_MODE_STATE <= SELF_COUNT_SAVE;
---				
---				--or, if there is nothing 
---				else
---					SCALER_MODE_STATE <= PRE_SELF_COUNT;
---				end if;
---				
---			when SELF_COUNT_SAVE =>
---				reset_trig_from_scaler_mode <= '0';		
---				--add up bits to rate counting array
---				for ii in 29 downto 0 loop
---					if SELF_TRIG_LATCHED(ii) = '1' then
---						SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii) + 1;
---					else 
---						SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii);
---					end if;
---				end loop;	
---				SCALER_MODE_STATE <= SELF_CHECK;		
---		
---			when SELF_COUNT_LATCH =>
---				reset_trig_from_scaler_mode <= '1';		
---				for ii in 29 downto 0 loop
---					SELF_COUNT_RATE_LATCH(ii) <= SELF_COUNT_RATE(ii);
---				end loop;
---				
---				SCALER_MODE_STATE  <= SELF_COUNT_RESET;
---			
---			when SELF_COUNT_RESET =>
---				reset_trig_from_scaler_mode <= '1';		
---				for ii in 29 downto 0 loop
---					SELF_COUNT_RATE(ii) <= (others=>'0');
---				end loop;
---				
---				SCALER_MODE_STATE <=  SELF_COUNT_HOLD;
---			
---			when SELF_COUNT_HOLD =>
---				reset_trig_from_scaler_mode <= '1';		
---				if self_count_1Hz(2) = '1' then
---					SCALER_MODE_STATE <= SELF_CHECK;
---				else
---					for ii in 29 downto 0 loop
---						SELF_COUNT_RATE(ii) <= (others=>'0');
---					end loop;
---					SCALER_MODE_STATE <= SELF_COUNT_HOLD;
---
---				end if;
---				
---
---			when others=>
---				SCALER_MODE_STATE <= SELF_CHECK;
---	
---		end case;
---	end if;
---end process;	
+process(xCLR_ALL, CLK_40, SELF_TRIG_RATE_ONLY, SELF_COUNT_sig)
+begin
+	--SCALER_MODE_STATE <= SELF_CHECK;
+	if xCLR_ALL = '1' or RATE_ONLY_flag = '0' then
+		for ii in 29 downto 0 loop
+			SELF_COUNT_RATE(ii)       <= (others=>'0');
+			SELF_COUNT_RATE_LATCH(ii) <= (others=>'0');
+		end loop;
+	
+		reset_trig_from_scaler_mode <= '0';
+		SCALER_MODE_STATE <= SELF_CHECK;
+
+ 	elsif falling_edge(CLK_40) and RATE_ONLY_flag = '1' then
+		
+		--increment scalar state machine:
+		case SCALER_MODE_STATE is
+		
+			--check to see state of slow (1 Hz nominal) state machine
+			when SELF_CHECK =>
+				reset_trig_from_scaler_mode <= '1';
+				
+				--state #1: count triggers
+				if self_count_1Hz(2) = '1'   then
+					--check for overflow
+					for ii in 29 downto 0 loop
+						if SELF_COUNT_RATE(ii) = x"FFFF" then
+							SELF_COUNT_RATE(ii) <= x"FFFE";
+						else
+							SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii);
+						end if;
+					end loop;
+					SCALER_MODE_STATE <= SELF_CHECK_RESET; 
+				
+				--state #2: register trigger count and reset counters
+				else
+					SCALER_MODE_STATE <= SELF_COUNT_LATCH; 
+				end if;
+				
+			when SELF_CHECK_RESET => --pointless?
+				reset_trig_from_scaler_mode <= '1';
+				SCALER_MODE_STATE <= PRE_SELF_COUNT;
+				
+			when PRE_SELF_COUNT =>
+				if self_count_1Hz(2) = '1' then
+						
+						SCALER_MODE_STATE <= SELF_COUNT;
+						
+					else
+						SCALER_MODE_STATE <= SELF_CHECK;
+					end if;
+					
+			
+			when SELF_COUNT =>
+				reset_trig_from_scaler_mode <= '0';
+					
+			
+				if self_trig_ext_registered(1) = '1' then
+					SCALER_MODE_STATE <= SELF_COUNT_SAVE;
+					
+				else
+			
+					SCALER_MODE_STATE <= PRE_SELF_COUNT;
+				end if;
+				
+				
+			when SELF_COUNT_SAVE =>
+				reset_trig_from_scaler_mode <= '0';
+				
+				
+				
+				--add up bits to rate counting array
+				for ii in 29 downto 0 loop
+					if SELF_TRIG_LATCHED(ii) = '1' then
+						SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii) + 1;
+					else 
+						SELF_COUNT_RATE(ii) <= SELF_COUNT_RATE(ii); 
+					end if;
+				end loop;	
+				SCALER_MODE_STATE <= SELF_CHECK;		
+		
+			when SELF_COUNT_LATCH =>
+				reset_trig_from_scaler_mode <= '1';		
+				for ii in 29 downto 0 loop
+					SELF_COUNT_RATE_LATCH(ii) <= SELF_COUNT_RATE(ii);
+				end loop;
+				
+				SCALER_MODE_STATE  <= SELF_COUNT_RESET;
+			
+			when SELF_COUNT_RESET =>
+				reset_trig_from_scaler_mode <= '1';		
+				for ii in 29 downto 0 loop
+					SELF_COUNT_RATE(ii) <= (others=>'0');
+				end loop;
+				
+				SCALER_MODE_STATE <=  SELF_COUNT_HOLD;
+			
+			when SELF_COUNT_HOLD =>
+				reset_trig_from_scaler_mode <= '1';		
+				if self_count_1Hz(2) = '1' then
+					SCALER_MODE_STATE <= SELF_CHECK;
+				else
+					for ii in 29 downto 0 loop
+						SELF_COUNT_RATE(ii) <= (others=>'0');
+					end loop;
+					SCALER_MODE_STATE <= SELF_COUNT_HOLD;
+
+				end if;
+				
+
+			when others=>
+				SCALER_MODE_STATE <= SELF_CHECK;
+	
+		end case;
+	end if;
+end process;	
 ----generate signals to toggle above process w.r.t. slow 1Hz clock
---process(xCLR_ALL, xSLOW_CLK)
---begin
---	--COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
---	if xCLR_ALL = '1' then 
---		SELF_COUNT_sig       <= '0';
---		COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
---	elsif rising_edge(xSLOW_CLK) then
---		case COUNT_RATE_OF_SELFTRIG is
---			when STATE_ONE =>
---				SELF_COUNT_sig         <= '1';
---				COUNT_RATE_OF_SELFTRIG <= STATE_TWO;
---			when STATE_TWO =>
---				SELF_COUNT_sig         <= '0';
---				COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
---			when others=>
---				--blank
---		end case;
---	end if;
---end process;
+process(xCLR_ALL, xSLOW_CLK)
+begin
+	--COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
+	if xCLR_ALL = '1' then 
+		SELF_COUNT_sig       <= '0';
+		COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
+	elsif rising_edge(xSLOW_CLK) then
+		case COUNT_RATE_OF_SELFTRIG is
+			when STATE_ONE =>
+				SELF_COUNT_sig         <= '1';
+				COUNT_RATE_OF_SELFTRIG <= STATE_TWO;
+			when STATE_TWO =>
+				SELF_COUNT_sig         <= '0';
+				COUNT_RATE_OF_SELFTRIG <= STATE_ONE;
+			when others=>
+				--blank
+		end case;
+	end if;
+end process;
 ----------------------------------------------------------
 --clearing trigger
 						
